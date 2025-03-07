@@ -1,14 +1,8 @@
 import os
 import json
-import gspread
 import streamlit as st
 import pandas as pd
-from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
-
-# Fichier de clés API Google
-GOOGLE_CREDENTIALS_FILE = "your_credentials.json"  # Remplace par ton fichier
-SPREADSHEET_NAME = "Elite Dangerous Missions"
 
 # Dossier des logs d'Elite Dangerous
 log_dir = os.path.expanduser("~/Saved Games/Frontier Developments/Elite Dangerous")
@@ -108,7 +102,6 @@ if missions:
         df.drop(columns=["Expiry"], inplace=True)
         df.reset_index(drop=True, inplace=True)
 
-
     # Afficher le tableau mis à jour
     st.dataframe(df, use_container_width=True, hide_index=True)
     
@@ -130,29 +123,6 @@ if missions:
         kills_par_faction.columns = ["Faction", "Total Kills"]
         st.write("### Nombre total de kills par faction :")
         st.dataframe(kills_par_faction, use_container_width=True, hide_index=True)    
-    
-    
-
-    # Export vers Google Sheets
-    def upload_to_google_sheets(df):
-        """Envoie les missions vers Google Sheets"""
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_name(GOOGLE_CREDENTIALS_FILE, scope)
-        client = gspread.authorize(creds)
-
-        sheet = client.open(SPREADSHEET_NAME).sheet1
-        sheet.clear()
-
-        headers = ["MissionID", "Genre", "Sponsor", "Title", "Target", "Destination", "KillCount", "Payout", "Deadline", "Coop Mission"]
-        sheet.append_row(headers)
-
-        for _, row in df.iterrows():
-            sheet.append_row(row.tolist())
-
-        st.success(f"📤 {len(df)} missions envoyées vers Google Sheets !")
-
-    if st.button("📤 Exporter vers Google Sheets"):
-        upload_to_google_sheets(df)
 
 else:
     st.warning("Aucune mission active trouvée.")
